@@ -122,35 +122,19 @@
     ];
 
     var quizQ=[
-        {q:'Apa yang dimaksud dengan bullying?',o:['Bermain bersama teman secara berlebihan','Perilaku agresif berulang untuk menyakiti seseorang','Bercanda dengan teman tentang penampilannya','Belajar kelompok yang terlalu serius'],c:1},
-        {q:'Manakah yang termasuk bullying verbal?',o:['Memukul teman saat bertengkar','Mengejek dan menghina teman secara berulang','Mengabaikan teman yang sedang bicara','Menyebar foto teman tanpa izin'],c:1},
-        {q:'Apa dampak utama bullying bagi korban?',o:['Menjadi lebih kuat','Merasa senang','Mengalami stres, cemas, dan depresi','Mendapat banyak teman baru'],c:2},
+        {q:'Bullying atau perundungan adalah tindakan menyakiti orang lain secara sengaja dan berulang-ulang. Tindakan ini dapat berupa ejekan, ancaman, maupun kekerasan fisik. Bullying sering terjadi di lingkungan sekolah dan dapat berdampak buruk bagi korban.Berdasarkan struktur teks eksplanasi, paragraf tersebut termasuk bagian ....?',o:['Interpretasi','Deretan Penjelas','Pernyataan Umum','Penutup'],c:2},
+        {q:'Bullying dapat terjadi karena berbagai faktor. Salah satunya adalah kurangnya rasa empati terhadap orang lain. Selain itu, pengaruh lingkungan pergaulan yang buruk juga dapat mendorong seseorang melakukan bullying. Informasi yang terdapat pada teks tersebut adalah ....',o:['Dampak Bullying','Penyebab Bullying','Pengertian Bullying','Cara mengatasi bullying'],c:1},
+        {q:'Akibat bullying, korban dapat merasa takut, sedih, dan kehilangan rasa percaya diri. Dalam beberapa kasus, korban juga mengalami kesulitan berkonsentrasi saat belajar. Paragraf tersebut menjelaskan tentang....',o:['Pengertian Bullying','Jenis Bullying','Penyebab Bullying','Dampak Bullying'],c:3},
         {q:'Apa yang sebaiknya dilakukan jika kamu menjadi korban?',o:['Balas dendam','Diam saja','Melapor kepada guru atau orang dewasa','Pindah sekolah'],c:2},
-        {q:'Cyber bullying adalah...',o:['Bullying di dunia nyata','Bullying melalui media sosial dan internet','Bullying secara fisik','Bullying di sekolah'],c:1},
+        {q:'Cyberbullying adalah perundungan yang dilakukan melalui media digital, seperti media sosial, pesan singkat, atau platform daring lainnya. Bentuknya dapat berupa komentar kasar, penghinaan, maupun penyebaran informasi yang tidak benar. Gagasan pokok paragraf tersebut adalah ....',o:['Dampak media sosial','Pengertian cyberbullying','Cara menggunakan internet','Jenis-Jenis media sosial'],c:1},
         {q:'Apa yang bisa kamu lakukan sebagai saksi?',o:['Abaikan saja','Ikut mengejek','Membantu korban dan melaporkan','Mengambil video dan menyebarkannya'],c:2},
-        {q:'Bullying sosial ditandai dengan...',o:['Memukul korban','Mengucilkan seseorang dari kelompok','Mengirim pesan ancaman','Mencuri barang'],c:1},
+        {q:'Bullying yang terjadi terus-menerus dapat menyebabkan korban mengalami stres dan kecemasan. Oleh karena itu, tindakan bullying harus segera dihentikan. Makna kata stres pada teks tersebut adalah...',o:['Perasaan tenang','Tekanan atau beban pikiran','Semangat belajar','Keinginan untuk bermain'],c:1},
         {q:'Mengapa seseorang bisa menjadi pelaku?',o:['Karena mereka kuat','Karena mereka bahagia','Karena masalah pribadi, ingin berkuasa, atau iri hati','Karena disuruh guru'],c:2},
-        {q:'Apa yang harus dilakukan jika temanmu mengirim pesan bullying?',o:['Ikut tertawa','Tidak ikut campur','Mengingatkan teman itu salah','Block tanpa memberi tahu'],c:2},
+        {q:'Bullying dapat memberikan dampak jangka panjang bagi korban. Korban mungkin kehilangan kepercayaan diri dan mengalami kesulitan dalam menjalin hubungan sosial dengan orang lain. Simpulan yang tepat dari teks tersebut adalah ....',o:['Bullying tidak berbahaya bagi korban.','Bullying hanya berdampak sementara.','Bullying dapat menimbulkan dampak jangka panjang bagi korban.','Bullying membuat korban lebih mandiri.'],c:2},
         {q:'Langkah terbaik mencegah bullying di sekolah adalah...',o:['Mengabaikan kekerasan kecil','Membuat kebijakan anti-bullying dan budaya inklusif','Menghukum keras','Membiarkan siswa menyelesaikan sendiri'],c:1}
     ];
 
-    // Add explanations to quiz questions
-    quizQ.forEach(function(q, i) {
-        var explanations = [
-            'Bullying adalah perilaku agresif yang dilakukan secara sengaja dan berulang-ulang untuk menyakiti, mengintimidasi, atau merendahkan orang lain.',
-            'Bullying verbal melibatkan kata-kata yang menyakiti seperti mengejek, menghina, mengancam, atau memanggil dengan julukan yang tidak pantas.',
-            'Bullying dapat menyebabkan dampak psikologis yang serius bagi korban seperti stres, kecemasan, depresi, rendah diri, dan gangguan tidur.',
-            'Langkah terbaik adalah melapor kepada orang dewasa yang kamu percayai seperti guru, orang tua, atau konselor. Jangan balas dendam karena bisa memperburuk situasi.',
-            'Cyberbullying adalah bullying yang terjadi melalui teknologi digital seperti media sosial, pesan teks, email, atau platform online lainnya.',
-            'Sebagai saksi, kamu memiliki peran penting! Bantu korban dengan mendukungnya dan laporkan kejadian tersebut kepada orang dewasa.',
-            'Bullying sosial atau relasional bertujuan merusak reputasi atau hubungan sosial seseorang, seperti mengucilkan, menyebarkan rumor, atau mempengaruhi orang lain untuk tidak berteman.',
-            'Beberapa alasan seseorang menjadi pelaku bullying antara lain karena memiliki masalah pribadi, ingin merasa berkuasa, iri hati, atau juga pernah menjadi korban bullying.',
-            'Kamu bisa mengingatkan temanmu bahwa perilakunya salah dan menyakiti orang lain. Jika dia tidak berhenti, laporkan kepada orang dewasa.',
-            'Pencegahan bullying yang efektif memerlukan kebijakan yang jelas dan budaya sekolah yang inklusif dimana setiap orang merasa aman dan dihargai.'
-        ];
-        q.e = explanations[i];
-    });
-
+    
     // Quiz state variables
     var quizTimer = null;
     var timeLeft = 15;
