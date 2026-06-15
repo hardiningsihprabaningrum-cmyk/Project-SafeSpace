@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeSpace — Stop Bullying</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div id="toasts"></div>
+
+    <!-- FAB SOS -->
+    <button class="fab" onclick="go('report')" aria-label="Laporkan darurat">
+        <i class="fa-solid fa-plus"></i> <span>Lapor Darurat</span>
+    </button>
+
+    <!-- NAV -->
+    <nav class="nav" role="navigation" aria-label="Navigasi utama">
+        <div class="logo" onclick="go('home')" tabindex="0" role="button">
+            <div class="logo-ic"><i class="fa-solid fa-shield-heart"></i></div>
+            <span class="logo-tx">SafeSpace</span>
+        </div>
+        
+        <div class="nlinks">
+            <button class="nl act" id="navHomeBtn" data-p="home" onclick="go('home')"><i class="fa-solid fa-house"></i> Beranda</button>
+            <button class="nl" id="navReportBtn" data-p="report" onclick="go('report')"><i class="fa-solid fa-flag"></i> Lapor</button>
+            <button class="nl" id="navDashBtn" data-p="dashboard" onclick="go('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
+            <button class="nl" id="navEduBtn" data-p="education" onclick="go('education')"><i class="fa-solid fa-book-open"></i> Edukasi</button>
+            <button class="nl" data-p="quiz" onclick="go('quiz')"><i class="fa-solid fa-brain"></i> Quiz</button>
+            <button class="nl" id="navHistBtn" data-p="history" onclick="go('history')"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat <span class="notif-dot" id="navBadge">0</span></button>
+        </div>
+        
+        <div class="nact">
+            <button class="ib" id="navAdminBtn" onclick="openAdminModal()" aria-label="Login Admin" title="Login Admin"><i class="fa-solid fa-user-shield"></i></button>
+            <button class="ib" id="navAdminLogoutBtn" onclick="adminLogout()" aria-label="Logout Admin" title="Logout Admin" style="color:var(--acc)"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <button class="ib" id="dmBtn" onclick="toggleDM()" aria-label="Ganti mode gelap"><i class="fa-solid fa-moon"></i></button>
+            <button class="ib mob-show" onclick="toggleMob()" aria-label="Buka menu"><i class="fa-solid fa-bars"></i></button>
+        </div>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div class="moverlay" id="movl" onclick="toggleMob()"></div>
+    <div class="mmenu" id="mmenu">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px">
+            <div class="logo">
+                <div class="logo-ic"><i class="fa-solid fa-shield-heart"></i></div>
+                <span class="logo-tx">SafeSpace</span>
+            </div>
+            <button class="ib" onclick="toggleMob()" aria-label="Tutup menu"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2px">
+            <button class="mnl act" id="mobHomeBtn" data-p="home" onclick="go('home');toggleMob()"><i class="fa-solid fa-house mnl-icon"></i> Beranda</button>
+            <button class="mnl" id="mobReportBtn" data-p="report" onclick="go('report');toggleMob()"><i class="fa-solid fa-flag mnl-icon"></i> Lapor</button>
+            <button class="mnl" id="mobDashBtn" data-p="dashboard" onclick="go('dashboard');toggleMob()"><i class="fa-solid fa-chart-pie mnl-icon"></i> Dashboard</button>
+            <button class="mnl" id="mobEduBtn" data-p="education" onclick="go('education');toggleMob()"><i class="fa-solid fa-book-open mnl-icon"></i> Edukasi</button>
+            <button class="mnl" data-p="quiz" onclick="go('quiz');toggleMob()"><i class="fa-solid fa-brain mnl-icon"></i> Quiz</button>
+            <button class="mnl" id="mobHistBtn" data-p="history" onclick="go('history');toggleMob()"><i class="fa-solid fa-clock-rotate-left mnl-icon"></i> Riwayat <span class="notif-dot" id="mobBadge">0</span></button>
+        </div>
+    </div>
+
+    <!-- NOTIFIKASI LAPORAN TERKIRIM -->
+    <div id="successOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:8000;"></div>
+    <div id="successModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:8001; background:var(--card); border-radius:22px; padding:32px 28px 28px; width:90%; max-width:440px; box-shadow:0 24px 64px rgba(0,0,0,.22); text-align:center; overflow:hidden;">
+        <!-- Confetti Canvas -->
+        <canvas id="confettiCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; border-radius:20px;"></canvas>
+        
+        <div style="position:relative; z-index:1;">
+            <!-- Animated checkmark -->
+            <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#D1FAE5,#A7F3D0); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; box-shadow:0 8px 24px rgba(16,185,129,.25); animation: popIn .5s cubic-bezier(.175,.885,.32,1.275) forwards">
+                <i class="fa-solid fa-circle-check" style="font-size:38px; color:#10B981"></i>
+            </div>
+
+            <!-- Title with pulse dot -->
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px">
+                <span style="width:9px; height:9px; border-radius:50%; background:#10B981; display:inline-block; animation:pulseDot 1.5s ease-in-out infinite;"></span>
+                <h3 style="font-weight:900; font-size:1.45rem; color:var(--txt)">Laporan Berhasil Terkirim!</h3>
+            </div>
+
+            <p style="font-size:14px; color:var(--muted); margin-bottom:18px; line-height:1.6">Terima kasih sudah berani melapor. Laporan kamu <strong style="color:var(--txt)">sudah kami terima</strong> dan akan segera ditindaklanjuti.</p>
+
+            <!-- Report Detail Card -->
+            <div id="successReportDetail" style="background:var(--bg); border:1.5px solid var(--bdr); border-radius:12px; padding:14px 16px; margin-bottom:16px; text-align:left;">
+                <p style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:10px"><i class="fa-solid fa-receipt" style="margin-right:5px"></i>Ringkasan Laporan</p>
+                <div style="display:flex; flex-direction:column; gap:7px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:11.5px; font-weight:700; color:var(--muted); width:70px; flex-shrink:0;">Jenis</span>
+                        <span id="sDetailType" style="font-size:13px; font-weight:700; color:var(--txt)">-</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:11.5px; font-weight:700; color:var(--muted); width:70px; flex-shrink:0;">Lokasi</span>
+                        <span id="sDetailLoc" style="font-size:13px; font-weight:700; color:var(--txt)">-</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:11.5px; font-weight:700; color:var(--muted); width:70px; flex-shrink:0;">Status</span>
+                        <span style="font-size:12px; font-weight:800; color:#92400E; background:#FEF3C7; padding:2px 10px; border-radius:20px;"><i class="fa-solid fa-clock" style="font-size:10px; margin-right:4px;"></i>Sedang Diproses</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:11.5px; font-weight:700; color:var(--muted); width:70px; flex-shrink:0;">Waktu</span>
+                        <span id="sDetailTime" style="font-size:12.5px; font-weight:700; color:var(--txt)">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote -->
+            <div style="background:var(--pri-l); border-radius:10px; padding:11px 15px; margin-bottom:20px; display:flex; align-items:center; gap:10px">
+                <i class="fa-solid fa-shield-heart" style="color:var(--pri); font-size:18px; flex-shrink:0"></i>
+                <p style="font-size:12px; color:var(--pri); font-weight:700; text-align:left; margin:0; line-height:1.5" id="successQuote"></p>
+            </div>
+
+            <!-- Buttons -->
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="bp" onclick="closeSuccessModal()" style="width:100%; justify-content:center; font-size:14px; position:relative; overflow:hidden;">
+                    <i class="fa-solid fa-house"></i> Kembali ke Beranda
+                    <span id="successCountdown" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:11px; background:rgba(255,255,255,.25); border-radius:20px; padding:2px 8px; font-weight:800;">5</span>
+                </button>
+                <button onclick="go('report'); closeSuccessModal();" style="width:100%; padding:10px; border-radius:10px; border:2px solid var(--bdr); background:transparent; color:var(--muted); font-family:'Nunito',sans-serif; font-size:13.5px; font-weight:700; cursor:pointer; transition:all .2s;" onmouseover="this.style.borderColor='var(--pri)';this.style.color='var(--pri)'" onmouseout="this.style.borderColor='var(--bdr)';this.style.color='var(--muted)'">
+                    <i class="fa-solid fa-plus" style="margin-right:6px;"></i>Buat Laporan Lain
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="adminModal" onclick="if(event.target===this)closeAdminModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:var(--card); border-radius:20px; padding:36px 28px; max-width:360px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,.25); position:relative; text-align:center;">
+            <button onclick="closeAdminModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:18px; color:var(--muted); cursor:pointer"><i class="fa-solid fa-xmark"></i></button>
+            <div style="width:56px; height:56px; border-radius:16px; background:var(--pri-l); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <i class="fa-solid fa-user-shield" style="font-size:24px; color:var(--pri)"></i>
+            </div>
+            <h3 style="font-weight:800; font-size:1.25rem; margin-bottom:6px; color:var(--txt)">Login Admin</h3>
+            <p style="font-size:13px; color:var(--muted); margin-bottom:22px">Masukkan username dan password untuk mengakses mode Admin.</p>
+            <form onsubmit="adminModalLogin(event)" style="text-align:left;">
+                <label style="font-size:12px; font-weight:700; color:var(--muted); display:block; margin-bottom:5px">Username</label>
+                <input type="text" id="modalUser" class="fi" placeholder="Username" required style="margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:700; color:var(--muted); display:block; margin-bottom:5px">Password</label>
+                <div style="position:relative; margin-bottom:20px;">
+                    <input type="password" id="modalPass" class="fi" placeholder="Password" required style="padding-right:42px;">
+                    <button type="button" onclick="toggleModalPass()" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px;"><i id="eyeIcon" class="fa-solid fa-eye"></i></button>
+                </div>
+                <button type="submit" class="bp" style="width:100%; justify-content:center;">
+                    <i class="fa-solid fa-lock-open"></i> Masuk sebagai Admin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main style="padding-top:80px; padding-bottom:48px; position:relative; z-index:10">
+        
+        <!-- HOME -->
+        <section id="pg-home" class="page on show" style="max-width:1120px; margin:0 auto; padding:0 16px">
+            <div style="text-align:center; padding:40px 0 72px">
+                <div style="display:inline-flex; align-items:center; gap:8px; padding:8px 18px; border-radius:9999px; font-size:13.5px; font-weight:700; margin-bottom:22px; background:var(--pri-l); color:var(--pri)">
+                    <i class="fa-solid fa-shield-heart"></i> Stop Bullying, Mulai dari Kamu
+                </div>
+                <h1 class="htitle" style="font-weight:900; font-size:3.4rem; line-height:1.08; margin-bottom:22px; color:var(--txt)">
+                    Berani Bicara,<br><span style="color:var(--pri)">Berhenti Bullying</span>
+                </h1>
+                <p style="font-size:17px; max-width:600px; margin:0 auto 36px; color:var(--muted); line-height:1.7">
+                    SafeSpace adalah ruang aman untuk melaporkan bullying secara anonim, belajar tentang dampaknya, dan berjuang menciptakan lingkungan sekolah yang lebih baik.
+                </p>
+                <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:14px">
+                    <button class="ba" onclick="go('report')"><i class="fa-solid fa-flag"></i> Laporkan Sekarang</button>
+                    <button class="bo" onclick="go('education')"><i class="fa-solid fa-book-open"></i> Pelajari Selengkapnya</button>
+                </div>
+            </div>
+
+            <div class="crd crd-nh" style="padding:22px 28px; text-align:center; max-width:680px; margin:0 auto 56px; border-left:4px solid var(--acc)">
+                <i class="fa-solid fa-quote-left" style="font-size:22px; color:var(--acc); margin-bottom:10px; display:block"></i>
+                <p id="quoteTx" style="font-size:17px; font-weight:600; font-style:italic; color:var(--txt); line-height:1.6"></p>
+                <p style="margin-top:10px; font-size:12.5px; font-weight:700; color:var(--muted)">— SafeSpace</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-bottom:56px">
+                <div class="crd" style="padding:22px; text-align:center; cursor:pointer" onclick="go('report')">
+                    <div class="sic" style="margin:0 auto 14px; background:var(--acc-l); color:var(--acc)"><i class="fa-solid fa-flag"></i></div>
+                    <h3 style="font-weight:700; font-size:16px; margin-bottom:6px; color:var(--txt)">Laporan Anonim</h3>
+                    <p style="font-size:13px; color:var(--muted)">Laporkan kejadian bullying tanpa takut identitasmu terbongkar.</p>
+                </div>
+                <div class="crd" style="padding:22px; text-align:center; cursor:pointer" onclick="go('dashboard')">
+                    <div class="sic" style="margin:0 auto 14px; background:var(--pri-l); color:var(--pri)"><i class="fa-solid fa-chart-pie"></i></div>
+                    <h3 style="font-weight:700; font-size:16px; margin-bottom:6px; color:var(--txt)">Statistik Realtime</h3>
+                    <p style="font-size:13px; color:var(--muted)">Pantau data dan tren bullying di lingkungan sekolahmu.</p>
+                    <p style="font-size:11px; color:var(--acc); font-weight:700; margin-top:6px"><i class="fa-solid fa-lock" style="font-size:10px"></i> Khusus Admin/Guru</p>
+                </div>
+                <div class="crd" style="padding:22px; text-align:center; cursor:pointer" onclick="go('education')">
+                    <div class="sic" style="margin:0 auto 14px; background:#D1FAE5; color:#059669"><i class="fa-solid fa-book-open"></i></div>
+                    <h3 style="font-weight:700; font-size:16px; margin-bottom:6px; color:var(--txt)">Edukasi Lengkap</h3>
+                    <p style="font-size:13px; color:var(--muted)">Pelajari apa itu bullying, dampaknya, dan cara mengatasinya.</p>
+                </div>
+                <div class="crd" style="padding:22px; text-align:center; cursor:pointer" onclick="go('quiz')">
+                    <div class="sic" style="margin:0 auto 14px; background:#EDE9FE; color:#7C3AED"><i class="fa-solid fa-brain"></i></div>
+                    <h3 style="font-weight:700; font-size:16px; margin-bottom:6px; color:var(--txt)">Quiz Interaktif</h3>
+                    <p style="font-size:13px; color:var(--muted)">Uji pemahamanmu tentang bullying dan cara pencegahannya.</p>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:14px; margin-bottom:32px">
+                <div class="crd crd-nh" style="padding:18px; text-align:center">
+                    <p style="font-size:26px; font-weight:900; color:var(--pri)" id="h-total">0</p>
+                    <p style="font-size:10.5px; font-weight:700; margin-top:3px; color:var(--muted)">Total Laporan</p>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; text-align:center">
+                    <p style="font-size:26px; font-weight:900; color:var(--acc)" id="h-verbal">0</p>
+                    <p style="font-size:10.5px; font-weight:700; margin-top:3px; color:var(--muted)">Bullying Verbal</p>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; text-align:center">
+                    <p style="font-size:26px; font-weight:900; color:#7C3AED" id="h-cyber">0</p>
+                    <p style="font-size:10.5px; font-weight:700; margin-top:3px; color:var(--muted)">Cyber Bullying</p>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; text-align:center">
+                    <p style="font-size:26px; font-weight:900; color:#059669" id="h-resolved">0</p>
+                    <p style="font-size:10.5px; font-weight:700; margin-top:3px; color:var(--muted)">Ditindaklanjuti</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- REPORT -->
+        <section id="pg-report" class="page" style="max-width:600px; margin:0 auto; padding:0 16px">
+            <div style="text-align:center; margin-bottom:28px">
+                <h2 style="font-weight:900; font-size:1.9rem; margin-bottom:10px; color:var(--txt)">Laporkan Bullying</h2>
+                <p style="color:var(--muted); font-size:14.5px">Isi form berikut untuk melaporkan kejadian bullying. Identitasmu akan dijaga kerahasiaannya.</p>
+            </div>
+            <div class="crd crd-nh" style="padding:22px 26px">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; padding:14px; border-radius:12px; background:var(--pri-l)">
+                    <div>
+                        <p style="font-weight:700; font-size:13.5px; color:var(--txt)">Mode Anonim Penuh</p>
+                        <p style="font-size:11.5px; color:var(--muted)">Identitasmu sebagai pelapor tidak akan dicatat</p>
+                    </div>
+                    <div class="tgl on" id="anonTgl" onclick="toggleAnon()" role="switch" aria-checked="true" tabindex="0"></div>
+                </div>
+                <form id="rptForm" onsubmit="submitRpt(event)">
+                    <div style="margin-bottom:18px" id="namaF">
+                        <label class="fl">Nama Pelapor <span style="color:var(--acc)">*</span></label>
+                        <input type="text" id="rName" class="fi" placeholder="Nama kamu (pelapor) atau biarkan anonim" required>
+                    </div>
+                    <div style="margin-bottom:18px">
+                        <label class="fl">Jenis Bullying <span style="color:var(--acc)">*</span></label>
+                        <select id="rType" class="fi" required>
+                            <option value="">-- Pilih Jenis --</option>
+                            <option value="Fisik">Bullying Fisik</option>
+                            <option value="Verbal">Bullying Verbal</option>
+                            <option value="Sosial">Bullying Sosial/Relasional</option>
+                            <option value="Cyber">Cyberbullying</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:18px">
+                        <label class="fl">Lokasi Kejadian <span style="color:var(--acc)">*</span></label>
+                        <input type="text" id="rLoc" class="fi" placeholder="Contoh: Koridor lantai 2, Kantin" required>
+                    </div>
+                    <div style="margin-bottom:18px">
+                        <label class="fl">Waktu Kejadian <span style="color:var(--acc)">*</span></label>
+                        <input type="datetime-local" id="rTime" class="fi" required>
+                    </div>
+                    <div style="margin-bottom:22px">
+                        <label class="fl">Deskripsi Laporan <span style="color:var(--acc)">*</span></label>
+                        <textarea id="rDesc" class="fi" rows="5" placeholder="Ceritakan apa yang terjadi secara detail..." required></textarea>
+                    </div>
+                    <div style="margin-bottom:22px">
+                        <label class="fl">Bukti (Opsional)</label>
+                        <div class="fupl" onclick="document.getElementById('rFile').click()">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size:26px; color:var(--pri); margin-bottom:8px; display:block"></i>
+                            <p style="font-size:13.5px; font-weight:700; color:var(--txt)">Klik untuk upload foto/bukti</p>
+                            <p style="font-size:12px; color:var(--muted); margin-top:4px">Maks 500KB (JPG, PNG, PDF)</p>
+                        </div>
+                        <input type="file" id="rFile" style="display:none" accept="image/*,.pdf" onchange="handleFile(this)">
+                        <div id="fPrev" style="display:none; margin-top:10px; padding:10px 14px; border-radius:10px; background:var(--pri-l); flex-direction:column; gap:8px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
+                                <span style="font-size:13px; color:var(--pri); font-weight:700"><i class="fa-solid fa-paperclip" style="margin-right:6px"></i><span id="fName"></span></span>
+                                <button type="button" onclick="rmFile()" style="background:none; border:none; color:var(--acc); cursor:pointer; font-size:13px; font-weight:700"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div id="fImgPrev" style="display:none;"><img id="fImgEl" src="" alt="Preview" style="max-width:100%; max-height:180px; border-radius:8px; display:block; object-fit:contain; border:1px solid var(--bdr);"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="bp" style="width:100%; justify-content:center; font-size:15px"><i class="fa-solid fa-paper-plane"></i> Kirim Laporan</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section id="pg-dashboard" class="page" style="max-width:1120px; margin:0 auto; padding:0 16px">
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:28px">
+                <div>
+                    <h2 style="font-weight:900; font-size:1.4rem; margin-bottom:4px; color:var(--txt)">Dashboard Statistik</h2>
+                    <p style="color:var(--muted); font-size:14.5px">Pantau data dan tren laporan bullying di lingkungan sekolah.</p>
+                </div>
+                <button class="bp" style="padding:9px 16px; font-size:13px" onclick="shareDash()"><i class="fa-solid fa-share-nodes"></i> Bagikan Statistik</button>
+            </div>
+            
+            <!-- STATS CARDS - ROW 1: BULLYING TYPES -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:16px">
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:#FEE2E2; color:#EF4444"><i class="fa-solid fa-hand-fist"></i></div>
+                    <div><p class="dash-stat-num" id="d-fisik">0</p><p class="dash-stat-label">Total Bullying Fisik</p></div>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:var(--acc-l); color:var(--acc)"><i class="fa-solid fa-comment-dots"></i></div>
+                    <div><p class="dash-stat-num" id="d-verbal">0</p><p class="dash-stat-label">Total Bullying Verbal</p></div>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:#D1FAE5; color:#059669"><i class="fa-solid fa-user-slash"></i></div>
+                    <div><p class="dash-stat-num" id="d-sosial">0</p><p class="dash-stat-label">Total Bullying Sosial</p></div>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:#EDE9FE; color:#7C3AED"><i class="fa-solid fa-laptop-code"></i></div>
+                    <div><p class="dash-stat-num" id="d-cyber">0</p><p class="dash-stat-label">Total Cyberbullying</p></div>
+                </div>
+            </div>
+            <!-- STATS CARDS - ROW 2: TOTAL & SELSAI -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px">
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:var(--pri-l); color:var(--pri)"><i class="fa-solid fa-file-lines"></i></div>
+                    <div><p class="dash-stat-num" id="d-total">0</p><p class="dash-stat-label">Total Laporan</p></div>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:#D1FAE5; color:#059669"><i class="fa-solid fa-check-double"></i></div>
+                    <div><p class="dash-stat-num" id="d-selesai">0</p><p class="dash-stat-label">Selesai</p></div>
+                </div>
+            </div>
+
+            <!-- ALERT & DAILY TREND -->
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:18px">
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:#FEE2E2; color:#EF4444"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <p class="dash-stat-label" style="margin-top:0; margin-bottom:4px">Jenis Paling Sering</p>
+                        <p class="dash-stat-most" id="d-most">-</p>
+                    </div>
+                </div>
+                <div class="crd crd-nh" style="padding:18px; display:flex; align-items:center; gap:14px">
+                    <div class="sic dash-stat-icon" style="background:#EDE9FE; color:#7C3AED"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div>
+                        <p class="dash-stat-label" style="margin-top:0; margin-bottom:4px">Laporan Bulan Ini</p>
+                        <p class="dash-stat-num" id="d-week">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHARTS ROW 1: TREND CHART FULL WIDTH -->
+            <div class="dash-charts-grid" style="display:grid; grid-template-columns:1fr; gap:18px; margin-bottom:32px">
+                <div class="crd crd-nh" style="padding:24px">
+                    <h3 style="font-weight:700; font-size:16px; margin-bottom:16px; color:var(--txt)">Tren Bulan Ini</h3>
+                    <div id="lineChartWrap" style="height:260px; position:relative"><canvas id="lineC"></canvas></div>
+                    <div id="lineChartEmpty" style="display:none; height:200px; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--muted)">
+                        <i class="fa-regular fa-chart-bar" style="font-size:36px; opacity:0.4"></i>
+                        <p style="font-weight:700; font-size:13.5px">Belum ada laporan bulan ini</p>
+                        <p style="font-size:12px; opacity:0.7">Data akan muncul setelah ada laporan baru.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CHARTS ROW 2: PIE AND BAR CHARTS -->
+            <div class="dash-charts-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:32px">
+                <div class="crd crd-nh" style="padding:24px">
+                    <h3 style="font-weight:700; font-size:16px; margin-bottom:16px; color:var(--txt)">Distribusi Jenis</h3>
+                    <div style="max-height:280px; position:relative"><canvas id="pieC"></canvas></div>
+                </div>
+                <div class="crd crd-nh" style="padding:24px">
+                    <h3 style="font-weight:700; font-size:16px; margin-bottom:16px; color:var(--txt)">Per Kategori</h3>
+                    <div style="max-height:280px; position:relative"><canvas id="barC"></canvas></div>
+                </div>
+            </div>
+
+            <!-- AKTIVITAS TERBARU -->
+            <div class="crd crd-nh" style="padding:18px; margin-bottom:28px">
+                <h3 style="font-weight:700; font-size:15px; margin-bottom:16px; color:var(--txt)"><i class="fa-solid fa-clock-rotate-left" style="margin-right:8px; color:var(--pri)"></i>Aktivitas Terbaru</h3>
+                <div id="activityList"></div>
+            </div>
+
+        </section>
+
+        <!-- EDUCATION -->
+        <section id="pg-education" class="page" style="max-width:1060px; margin:0 auto; padding:0 16px">
+            <div style="text-align:center; margin-bottom:28px">
+                <h2 style="font-weight:900; font-size:1.9rem; margin-bottom:10px; color:var(--txt)">Edukasi Anti-Bullying</h2>
+                <p style="color:var(--muted); font-size:14.5px">Pelajari tentang bullying dan cara mengatasinya. Klik artikel untuk membaca selengkapnya.</p>
+            </div>
+            <div id="eduGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px"></div>
+        </section>
+
+        <!-- QUIZ -->
+        <section id="pg-quiz" class="page" style="max-width:600px; margin:0 auto; padding:0 16px">
+            <div style="text-align:center; margin-bottom:28px">
+                <h2 style="font-weight:900; font-size:1.9rem; margin-bottom:10px; color:var(--txt)">Quiz Anti-Bullying</h2>
+                <p style="color:var(--muted); font-size:14.5px">Uji pemahamanmu tentang bullying dan cara pencegahannya.</p>
+            </div>
+            <div class="crd crd-nh" style="padding:22px 26px" id="quizBox"></div>
+        </section>
+
+        <!-- HISTORY -->
+        <section id="pg-history" class="page" style="max-width:760px; margin:0 auto; padding:0 16px">
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; margin-bottom:20px">
+                <div>
+                    <h2 style="font-weight:900; font-size:1.9rem; margin-bottom:4px; color:var(--txt)">Riwayat Laporan</h2>
+                    <p style="color:var(--muted); font-size:14px">Semua laporan yang sudah dikirim (Khusus Admin/Guru).</p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                    <button class="bp" id="exportBtn" style="padding:7px 14px; font-size:12.5px; display:none" onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i> Export</button>
+                    <button class="bo" id="logoutBtn" style="padding:7px 14px; font-size:12.5px; display:none" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                </div>
+            </div>
+            
+            <!-- LOGIN ADMIN -->
+            <div id="adminLogin" class="crd crd-nh" style="padding:40px 26px; text-align:center; margin-bottom: 20px;">
+                <i class="fa-solid fa-lock login-lock"></i>
+                <h3 style="font-weight:800; font-size:1.4rem; margin-bottom:8px; color:var(--txt)">Akses Terbatas</h3>
+                <p style="font-size:14px; margin-bottom:24px; color:var(--muted); max-width: 350px; margin-left: auto; margin-right: auto;">
+                    Hanya Guru atau Admin yang dapat melihat riwayat laporan. Masukkan username dan password untuk melanjutkan.
+                </p>
+                <form onsubmit="adminLoginAction(event)" style="max-width: 300px; margin: 0 auto;">
+                    <input type="text" id="adminUser" class="fi" placeholder="Username" required style="margin-bottom:12px;">
+                    <input type="password" id="adminPin" class="fi" placeholder="Password" required style="margin-bottom:16px;">
+                    <button type="submit" class="bp" style="width:100%; justify-content:center;">
+                        <i class="fa-solid fa-lock-open"></i> Masuk
+                    </button>
+                </form>
+            </div>
+
+            <!-- SEARCH & FILTER BAR -->
+            <div id="histControls" style="display:none;">
+                <div class="crd crd-nh" style="padding:14px 18px; margin-bottom:20px; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
+                    <div style="flex:1; min-width:200px; position:relative">
+                        <i class="fa-solid fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13px"></i>
+                        <input type="text" id="hSearch" class="fi" style="padding-left:36px" placeholder="Cari laporan (lokasi, nama, deskripsi)..." oninput="renderHist()">
+                    </div>
+                    <select id="hFilter" class="fi" style="width:auto; padding:9px 12px; font-size:12.5px" onchange="renderHist()">
+                        <option value="all">Semua Status</option>
+                        <option value="Diproses">Diproses</option>
+                        <option value="Ditindaklanjuti">Ditindaklanjuti</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </div>
+                <div id="histList"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ARTICLE MODAL -->
+    <div class="modov" id="artMod">
+        <div class="modcon">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px">
+                <h3 style="font-weight:900; font-size:1.5rem; color:var(--txt)" id="modTitle"></h3>
+                <button class="ib" onclick="closeMod()" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modBody" style="color:var(--txt);"></div>
+        </div>
+    </div>
+
+    <!-- TINDAK LANJUT MODAL -->
+    <div class="modov" id="tindakMod">
+        <div class="modcon" style="max-width:500px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px">
+                <h3 style="font-weight:900; font-size:1.3rem; color:var(--txt)">
+                    <i class="fa-solid fa-clipboard-check" style="color:var(--pri); margin-right:8px;"></i>Form Tindak Lanjut
+                </h3>
+                <button class="ib" onclick="closeTindakMod()" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p style="font-size:13.5px; color:var(--muted); margin-bottom:16px;">
+                Jelaskan tindak lanjut apa yang akan/d sudah dilakukan untuk laporan ini.
+            </p>
+            <input type="hidden" id="tindakId">
+            <div style="margin-bottom:18px">
+                <label class="fl">Deskripsi Tindak Lanjut <span style="color:var(--acc)">*</span></label>
+                <textarea id="tindakDesc" class="fi" rows="4" placeholder="Contoh: Telah dipanggil orang tua korban dan pelaku, lalu diberikan surat peringatan..." required></textarea>
+            </div>
+            <div style="display:flex; gap:12px; justify-content: flex-end;">
+                <button class="bo" onclick="closeTindakMod()" style="padding:9px 18px; font-size:13.5px;">Batal</button>
+                <button class="bp" onclick="submitTindakLanjut()" style="padding:9px 18px; font-size:13.5px;">
+                    <i class="fa-solid fa-check"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
